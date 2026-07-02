@@ -22,6 +22,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp() {
   const app = express();
 
+  // Hosted platforms (Render, Railway, etc.) terminate TLS at a proxy; without
+  // this, req.ip is the proxy's address and express-rate-limit rejects the
+  // X-Forwarded-For header it receives.
+  app.set('trust proxy', 1);
+
   // Default CORP (same-origin) blocks the client (different port/origin in dev,
   // possibly a different origin in prod) from loading <img>/<video> uploads via
   // plain no-cors requests. This API is meant to be consumed cross-origin.

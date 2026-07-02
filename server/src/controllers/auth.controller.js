@@ -6,18 +6,24 @@ import * as authService from '../services/authService.js';
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const REFRESH_COOKIE_PATH = '/api/auth';
 
+// In production the client and API live on different origins (cross-site), so
+// the cookie must be SameSite=None + Secure or browsers won't send it.
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: env.NODE_ENV === 'production',
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: REFRESH_COOKIE_PATH,
+};
+
 function setRefreshCookie(res, token) {
   res.cookie(REFRESH_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: REFRESH_COOKIE_PATH,
+    ...REFRESH_COOKIE_OPTIONS,
     maxAge: parseDurationToMs(env.JWT_REFRESH_EXPIRES_IN),
   });
 }
 
 function clearRefreshCookie(res) {
-  res.clearCookie(REFRESH_COOKIE_NAME, { path: REFRESH_COOKIE_PATH });
+  res.clearCookie(REFRESH_COOKIE_NAME, REFRESH_COOKIE_OPTIONS);
 }
 
 export const register = catchAsync(async (req, res) => {
